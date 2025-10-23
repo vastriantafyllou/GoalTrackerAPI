@@ -79,7 +79,7 @@ public class GoalTrackerAppDbContext : DbContext
                  .IsRequired()
                  .OnDelete(DeleteBehavior.Cascade); // Deleting a User also deletes their Goals
              
-             entity.HasOne(g => g.Category)
+             entity.HasOne(g => g.GoalCategory)
                  .WithMany(c => c.Goals)
                  .HasForeignKey(g => g.GoalCategoryId)
                  .IsRequired(false) // makes this relationship optional.

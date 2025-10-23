@@ -16,7 +16,7 @@ namespace GoalTrackerApp.Data
         
         // GoalCategory - Goal (One-to-Many, Optional)
         public int? GoalCategoryId { get; set; } // foreign key
-        public virtual GoalCategory? Category { get; set; } 
+        public virtual GoalCategory? GoalCategory { get; set; } 
     }
 }
 
