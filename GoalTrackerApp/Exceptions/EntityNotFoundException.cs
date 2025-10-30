@@ -2,10 +2,10 @@
 {
     public class EntityNotFoundException : AppException
     {
-        private static readonly string DEFAULT_CODE = "NotFound";
+        private static readonly string DefaultCode = "NotFound";
 
         public EntityNotFoundException(string code, string message)
-            : base(code + DEFAULT_CODE, message)
+            : base(code + DefaultCode, message)
         {
         }
     }

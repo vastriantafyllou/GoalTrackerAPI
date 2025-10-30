@@ -2,10 +2,10 @@
 {
     public class EntityNotAuthorizedException : AppException
     {
-        private static readonly string DEFAULT_CODE = "NotAuthorized";
+        private static readonly string DefaultCode = "NotAuthorized";
 
         public EntityNotAuthorizedException(string code, string message)
-            : base(code + DEFAULT_CODE, message)
+            : base(code + DefaultCode, message)
         {
         }
     }
