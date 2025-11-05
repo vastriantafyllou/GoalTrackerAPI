@@ -1,16 +1,21 @@
-
 using System.ComponentModel.DataAnnotations;
 
 namespace GoalTrackerApp.Dto;
 
-    public class GoalCreateDto
-    {
-        [Required(ErrorMessage = "Title is required.")]
-        [StringLength(100, MinimumLength = 3, ErrorMessage = "Title must be between 3 and 100 characters.")]
-        public string Title { get; set; } = string.Empty;
+/// <summary>
+/// Data transfer object for creating a new goal.
+/// </summary>
+public class GoalCreateDto
+{
+    [Required(ErrorMessage = "Title is required.")]
+    [StringLength(100, MinimumLength = 3, ErrorMessage = "Title must be between 3 and 100 characters.")]
+    public string Title { get; set; } = string.Empty;
 
-        [StringLength(500, ErrorMessage = "Description cannot exceed 500 characters.")]
-        public string? Description { get; set; }
+    [StringLength(500, ErrorMessage = "Description cannot exceed 500 characters.")]
+    public string? Description { get; set; }
 
-        public DateTime? DueDate { get; set; }
-    }
+    /// <summary>
+    /// Optional due date for the goal.
+    /// </summary>
+    public DateTime? DueDate { get; set; }
+}
