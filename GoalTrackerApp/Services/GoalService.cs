@@ -12,113 +12,131 @@ namespace GoalTrackerApp.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
-        private readonly ILogger<GoalService> _logger;
+        private readonly ILogger<GoalService> _logger = new LoggerFactory().AddSerilog().CreateLogger<GoalService>();
 
-        public GoalService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<GoalService> logger)
+        public GoalService(IUnitOfWork unitOfWork, IMapper mapper)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
-            _logger = logger;
         }
 
+        // --- 1. CREATE ---
         public async Task<GoalReadOnlyDto> CreateGoalAsync(GoalCreateDto dto, int userId)
         {
             var goal = _mapper.Map<Goal>(dto);
             
-            // Set ownership and default status
             goal.UserId = userId;
             goal.GoalStatus = GoalStatus.InProgress;
+
+            // Validate category if provided
+            if (dto.GoalCategoryId.HasValue)
+            {
+                var category = await _unitOfWork.GoalCategoryRepository.GetAsync(dto.GoalCategoryId.Value);
+                if (category == null || category.UserId != userId)
+                {
+                    throw new EntityNotFoundException("GoalCategory", 
+                        $"Category with ID: {dto.GoalCategoryId} not found or does not belong to user.");
+                }
+            }
 
             try
             {
                 await _unitOfWork.GoalRepository.AddAsync(goal);
                 await _unitOfWork.SaveAsync();
 
-                _logger.LogInformation("Goal created: ID={GoalId}, User={UserId}", goal.Id, userId);
+                _logger.LogInformation("New Goal created with ID: {GoalId} for User: {UserId}", goal.Id, userId);
                 
                 return _mapper.Map<GoalReadOnlyDto>(goal);
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                _logger.LogError(ex, "Error creating goal for user {UserId}", userId);
+                _logger.LogError(e, "Error creating goal for user {UserId}", userId);
                 throw new ServerException("Server", "Could not create goal.");
             }
         }
 
+        // --- 2. READ ALL (for a user) ---
         public async Task<IEnumerable<GoalReadOnlyDto>> GetGoalsForUserAsync(int userId)
         {
             var goals = await _unitOfWork.GoalRepository.GetGoalsByUserIdAsync(userId);
             return _mapper.Map<IEnumerable<GoalReadOnlyDto>>(goals);
         }
 
+        // --- 3. READ ONE ---
         public async Task<GoalReadOnlyDto> GetGoalByIdAsync(int goalId, int userId)
         {
             var goal = await _unitOfWork.GoalRepository.GetAsync(goalId);
 
             if (goal == null)
             {
-                throw new EntityNotFoundException("Goal", $"Goal with ID {goalId} not found.");
+                throw new EntityNotFoundException("Goal", $"Goal with ID: {goalId} not found.");
             }
 
-            // Authorization check: ensure user owns this goal
+            // Security check: ensure the goal belongs to the requesting user
             if (goal.UserId != userId)
             {
-                _logger.LogWarning("Unauthorized access attempt: User {UserId} tried to access Goal {GoalId}", 
-                    userId, goalId);
-                // Return same error as not found to avoid information disclosure
-                throw new EntityNotFoundException("Goal", $"Goal with ID {goalId} not found.");
+                _logger.LogWarning("User {UserId} tried to access unauthorized goal {GoalId}", userId, goalId);
+                throw new EntityNotFoundException("Goal", $"Goal with ID: {goalId} not found.");
             }
 
             return _mapper.Map<GoalReadOnlyDto>(goal);
         }
 
+        // --- 4. UPDATE ---
         public async Task UpdateGoalAsync(int goalId, GoalUpdateDto dto, int userId)
         {
             var goal = await _unitOfWork.GoalRepository.GetAsync(goalId);
 
             if (goal == null)
             {
-                throw new EntityNotFoundException("Goal", $"Goal with ID {goalId} not found.");
+                throw new EntityNotFoundException("Goal", $"Goal with ID: {goalId} not found.");
             }
 
-            // Authorization check: ensure user owns this goal
+            // Security check: ensure the goal belongs to the requesting user
             if (goal.UserId != userId)
             {
-                _logger.LogWarning("Unauthorized update attempt: User {UserId} tried to update Goal {GoalId}", 
-                    userId, goalId);
-                throw new EntityNotFoundException("Goal", $"Goal with ID {goalId} not found.");
+                _logger.LogWarning("User {UserId} tried to update unauthorized goal {GoalId}", userId, goalId);
+                throw new EntityNotFoundException("Goal", $"Goal with ID: {goalId} not found.");
             }
 
-            // Map updated values to existing entity
+            // Validate category if provided
+            if (dto.GoalCategoryId.HasValue)
+            {
+                var category = await _unitOfWork.GoalCategoryRepository.GetAsync(dto.GoalCategoryId.Value);
+                if (category == null || category.UserId != userId)
+                {
+                    throw new EntityNotFoundException("GoalCategory", 
+                        $"Category with ID: {dto.GoalCategoryId} not found or does not belong to user.");
+                }
+            }
+
             _mapper.Map(dto, goal);
             
             await _unitOfWork.GoalRepository.UpdateAsync(goal);
             await _unitOfWork.SaveAsync();
-            
-            _logger.LogInformation("Goal updated: ID={GoalId}, User={UserId}", goalId, userId);
+            _logger.LogInformation("Goal {GoalId} updated by user {UserId}", goalId, userId);
         }
 
+        // --- 5. DELETE ---
         public async Task DeleteGoalAsync(int goalId, int userId)
         {
             var goal = await _unitOfWork.GoalRepository.GetAsync(goalId);
 
             if (goal == null)
             {
-                throw new EntityNotFoundException("Goal", $"Goal with ID {goalId} not found.");
+                throw new EntityNotFoundException("Goal", $"Goal with ID: {goalId} not found.");
             }
 
-            // Authorization check: ensure user owns this goal
+            // Security check: ensure the goal belongs to the requesting user
             if (goal.UserId != userId)
             {
-                _logger.LogWarning("Unauthorized delete attempt: User {UserId} tried to delete Goal {GoalId}", 
-                    userId, goalId);
-                throw new EntityNotFoundException("Goal", $"Goal with ID {goalId} not found.");
+                _logger.LogWarning("User {UserId} tried to delete unauthorized goal {GoalId}", userId, goalId);
+                throw new EntityNotFoundException("Goal", $"Goal with ID: {goalId} not found.");
             }
 
             await _unitOfWork.GoalRepository.DeleteAsync(goalId);
             await _unitOfWork.SaveAsync();
-            
-            _logger.LogInformation("Goal deleted: ID={GoalId}, User={UserId}", goalId, userId);
+            _logger.LogInformation("Goal {GoalId} deleted by user {UserId}", goalId, userId);
         }
     }
 }
