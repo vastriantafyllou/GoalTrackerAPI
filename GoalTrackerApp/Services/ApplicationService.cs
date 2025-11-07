@@ -16,5 +16,6 @@ namespace GoalTrackerApp.Services
 
         public UserService UserService => new(_unitOfWork, _mapper);
         public GoalService GoalService => new(_unitOfWork, _mapper);
+        public GoalCategoryService GoalCategoryService => new(_unitOfWork, _mapper);
     }
 }
