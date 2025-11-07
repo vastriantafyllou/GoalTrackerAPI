@@ -20,13 +20,26 @@ namespace GoalTrackerApp.Configuration
             // Goal mappings
             CreateMap<Goal, GoalReadOnlyDto>()
                 .ForMember(dest => dest.Status, 
-                    opt => opt.MapFrom(src => src.GoalStatus.ToString()));
+                    opt => opt.MapFrom(src => src.GoalStatus.ToString()))
+                .ForMember(dest => dest.CreatedDate,
+                    opt => opt.MapFrom(src => src.InsertedAt))
+                .ForMember(dest => dest.CategoryName,
+                    opt => opt.MapFrom(src => src.GoalCategory != null ? src.GoalCategory.Name : null));
 
             CreateMap<GoalCreateDto, Goal>();
             
             CreateMap<GoalUpdateDto, Goal>()
                 .ForMember(dest => dest.GoalStatus, 
                     opt => opt.MapFrom(src => src.Status));
+
+            // GoalCategory mappings
+            CreateMap<GoalCategoryCreateDto, GoalCategory>();
+            
+            CreateMap<GoalCategoryUpdateDto, GoalCategory>();
+            
+            CreateMap<GoalCategory, GoalCategoryReadOnlyDto>()
+                .ForMember(dest => dest.CreatedDate,
+                    opt => opt.MapFrom(src => src.InsertedAt));
         }
     }
 }
