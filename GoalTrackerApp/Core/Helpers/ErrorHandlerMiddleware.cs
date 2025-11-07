@@ -6,13 +6,14 @@ namespace GoalTrackerApp.Core.Helpers
 {
     public class ErrorHandlerMiddleware
     {
-        private readonly ILogger<ErrorHandlerMiddleware> _logger;
+        private readonly ILogger<ErrorHandlerMiddleware> _logger = 
+            new LoggerFactory().AddSerilog().CreateLogger<ErrorHandlerMiddleware>();
+
         private readonly RequestDelegate _next;
 
-        public ErrorHandlerMiddleware(RequestDelegate next, ILogger<ErrorHandlerMiddleware> logger)
+        public ErrorHandlerMiddleware(RequestDelegate next)
         {
-            _next = next;
-            _logger = logger;
+            this._next = next;
         }
 
         public async Task Invoke(HttpContext context)
@@ -42,6 +43,7 @@ namespace GoalTrackerApp.Core.Helpers
                 response.StatusCode = exception switch
                 {
                     InvalidRegistrationException or
+                    InvalidArgumentException or
                     EntityAlreadyExistsException => (int)HttpStatusCode.BadRequest, // 400
                     EntityNotAuthorizedException => (int)HttpStatusCode.Unauthorized,    // 401
                     EntityForbiddenException => (int)HttpStatusCode.Forbidden,          // 403

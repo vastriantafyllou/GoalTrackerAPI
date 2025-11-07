@@ -19,13 +19,12 @@ namespace GoalTrackerApp.Core.Helpers;
                 operation.Responses.Add("401", new OpenApiResponse { Description = "Unauthorized" });
                 operation.Responses.Add("403", new OpenApiResponse { Description = "Forbidden" });
 
-                // Add security requirement
                 operation.Security = new List<OpenApiSecurityRequirement>();
 
                 var roles = context.MethodInfo.GetCustomAttributes(true).OfType<AuthorizeAttribute>()
+                    .Where(attr => !string.IsNullOrEmpty(attr.Roles))
                     .SelectMany(attr => attr.Roles!.Split(','));
 
-                // Add the security requirment for JWT Bearer with specified roles
                 operation.Security.Add(new OpenApiSecurityRequirement
                 {
                     {

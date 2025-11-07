@@ -1,4 +1,4 @@
-namespace GoalTrackerApp.Security
+namespace GoalTrackerApp.Core.Security
 {
     public static class EncryptionUtil
     {
