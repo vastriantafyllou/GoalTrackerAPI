@@ -16,39 +16,7 @@ namespace GoalTrackerApp.Controllers;
         {
             _configuration = configuration;
         }
-
-        /// <summary>
-        /// Registers a new user in the system
-        /// </summary>
-        /// <param name="userSignupDto">The user registration details</param>
-        /// <returns>The newly created user's information</returns>
-        /// <response code="201">User successfully registered</response>
-        /// <response code="400">Invalid input data</response>
-        /// <exception cref="InvalidRegistrationException">Thrown when registration data is invalid</exception>
-        [HttpPost("register")] 
-        [ProducesResponseType(typeof(UserReadOnlyDto), StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<UserReadOnlyDto>> RegisterUserAsync([FromBody] UserSignupDto userSignupDto)
-        {
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState
-                    .Where(e => e.Value?.Errors.Any() == true)
-                    .Select(e => new { 
-                        Field = e.Key, 
-                        Errors = e.Value!.Errors.Select(er => er.ErrorMessage).ToArray()
-                    })
-                    .ToList();
-
-                var errorMessage = string.Join("; ", errors.SelectMany(e => e.Errors));
-                throw new InvalidArgumentException("User", $"User registration failed: {errorMessage}");
-            }
-
-            var returnedUserDto = await ApplicationService.UserService.SignUpUserAsync(userSignupDto);
-            return CreatedAtAction(nameof(RegisterUserAsync), new { id = returnedUserDto.Id }, returnedUserDto);
-        }
-
-
+        
         /// <summary>
         /// Handles user authentication by validating credentials and returning a JWT token
         /// </summary>
@@ -57,36 +25,26 @@ namespace GoalTrackerApp.Controllers;
         /// <response code="200">Returns the JWT token upon successful authentication</response>
         /// <response code="401">Invalid username or password</response>
         /// <exception cref="EntityNotAuthorizedException">Thrown when authentication fails</exception>
-        [HttpPost("login")]
-        [ProducesResponseType(typeof(JwtTokenDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [HttpPost("login/access-token")]
         public async Task<ActionResult<JwtTokenDto>> LoginUserAsync([FromBody] UserLoginDto credentials)
         {
             var user = await ApplicationService.UserService.VerifyAndGetUserAsync(credentials) 
-                ?? throw new EntityNotAuthorizedException("User", "Invalid username or password.");
+                ?? throw new EntityNotAuthorizedException("User", "Bad Credentials");
 
-            // Determine token expiration based on KeepLoggedIn flag
-            var expirationHours = credentials.KeepLoggedIn ? 168 : 8; // 7 days or 8 hours
-            
-            var jwtSettings = _configuration.GetSection("Authentication");
             var token = ApplicationService.UserService.CreateUserToken(
                 user.Id, 
                 user.Username, 
                 user.Email, 
-                user.UserRole,
-                expirationHours,
-                jwtSettings["SecretKey"]!,
-                jwtSettings["Issuer"]!,
-                jwtSettings["Audience"]!);
+                user.UserRole, 
+                _configuration["Authentication:SecretKey"]!);
             
-            var userToken = new JwtTokenDto 
+            JwtTokenDto userToken = new JwtTokenDto 
             { 
                 Token = token,
                 Username = user.Username,
                 Role = user.UserRole.ToString(),
-                ExpiresAt = DateTime.UtcNow.AddHours(expirationHours) 
+                ExpiresAt = DateTime.UtcNow.AddHours(3) 
             };
-            
             return Ok(userToken);
         }
     }
