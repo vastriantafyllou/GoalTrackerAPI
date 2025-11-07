@@ -4,20 +4,20 @@ namespace GoalTrackerApp.Repositories;
 
 public class UnitOfWork : IUnitOfWork
 {
-    private readonly GoalTrackerAppDbContext context;
+    private readonly GoalTrackerAppDbContext _context;
     
     public UnitOfWork(GoalTrackerAppDbContext context)
     {
-        this.context = context;
+        _context = context;
     }
     
     // implement repositories as properties
-    public UserRepository UserRepository => new(context);
-    public GoalRepository GoalRepository => new(context);
-    public GoalCategoryRepository GoalCategoryRepository => new(context);
+    public UserRepository UserRepository => new(_context);
+    public GoalRepository GoalRepository => new(_context);
+    public GoalCategoryRepository GoalCategoryRepository => new(_context);
     
     public async Task <bool> SaveAsync()
     {
-        return await context.SaveChangesAsync() > 0;  // commit & rollback if fails
+        return await _context.SaveChangesAsync() > 0;  // commit & rollback if fails
     }
 }

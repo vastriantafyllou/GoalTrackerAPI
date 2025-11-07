@@ -11,9 +11,17 @@ public class GoalRepository : BaseRepository<Goal>, IGoalRepository
     {
     }
     
+    public override async Task<Goal?> GetAsync(int id)
+    {
+        return await dbSet
+            .Include(g => g.GoalCategory)
+            .FirstOrDefaultAsync(g => g.Id == id);
+    }
+    
     public async Task<IEnumerable<Goal>> GetGoalsByUserIdAsync(int userId)
     {
         return await dbSet
+            .Include(g => g.GoalCategory)
             .Where(g => g.UserId == userId)
             .ToListAsync();
     }
@@ -39,13 +47,11 @@ public class GoalRepository : BaseRepository<Goal>, IGoalRepository
             .CountAsync();
     }
     
-    // Groups goals by category name and returns a count for each.
     public async Task<IEnumerable<CategoryGoalCountDto>> GetGoalCountPerCategoryAsync(int userId)
     {
         return await dbSet
             .Where(g => g.UserId == userId)
             .Include(g => g.GoalCategory)
-            // Handle goals that might not have a category (null)
             .GroupBy(g => g.GoalCategory == null ? "Uncategorized" : g.GoalCategory.Name)
             .Select(group => new CategoryGoalCountDto
             {

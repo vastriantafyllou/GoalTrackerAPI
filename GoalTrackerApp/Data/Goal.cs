@@ -10,12 +10,10 @@ namespace GoalTrackerApp.Data
         public GoalStatus GoalStatus { get; set; } = GoalStatus.InProgress;
         public DateTime? DueDate { get; set; } 
         
-        // User - Goals (One-to-Many)
-        public int UserId { get; set; }  // foreign key
+        public int UserId { get; set; }
         public virtual User User { get; set; } = null!; 
         
-        // GoalCategory - Goal (One-to-Many, Optional)
-        public int? GoalCategoryId { get; set; } // foreign key
+        public int? GoalCategoryId { get; set; }
         public virtual GoalCategory? GoalCategory { get; set; } 
     }
 }

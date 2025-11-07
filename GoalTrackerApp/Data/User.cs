@@ -12,10 +12,7 @@ namespace GoalTrackerApp.Data
         public string Lastname { get; set; } = null!;
         public UserRole UserRole { get; set; }
 
-        // User - Goals (One-to-Many)
         public virtual ICollection<Goal> Goals { get; set; } = new HashSet<Goal>();
-        
-        // A User has personal GoalCategories (One-to-Many)
         public virtual ICollection<GoalCategory> GoalCategories { get; set; } = new HashSet<GoalCategory>();
     }
 }
