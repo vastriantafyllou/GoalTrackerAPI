@@ -1,6 +1,15 @@
+using System.Text;
 using GoalTrackerApp.Configuration;
+using GoalTrackerApp.Core.Helpers;
+using GoalTrackerApp.Data;
 using GoalTrackerApp.Repositories;
+using GoalTrackerApp.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Serilog;
 
 namespace GoalTrackerApp;
@@ -10,35 +19,120 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
-        var connString = builder.Configuration.GetConnectionString("DefaultConnection");
-        connString = connString!.Replace("{DB_PASS}", Environment.GetEnvironmentVariable("DB_PASS") ?? "");
+
+        var connString = builder.Configuration.GetConnectionString("DefaultConnection")
+                         ?? throw new InvalidOperationException("DefaultConnection string not found in configuration.");
+        var dbServer = builder.Configuration["DB_SERVER"];
+        var dbName = builder.Configuration["DB_NAME"];
+        var dbUser = builder.Configuration["DB_USER"];
+        var dbPassword = builder.Configuration["DB_PASS"];
         
-        // Add services to the container.
+        if (string.IsNullOrEmpty(dbServer))
+            throw new InvalidOperationException("DB_SERVER environment variable is not set.");
+        if (string.IsNullOrEmpty(dbName))
+            throw new InvalidOperationException("DB_NAME environment variable is not set.");
+        if (string.IsNullOrEmpty(dbUser))
+            throw new InvalidOperationException("DB_USER environment variable is not set.");
+        if (string.IsNullOrEmpty(dbPassword))
+            throw new InvalidOperationException("DB_PASS environment variable is not set.");
         
-        builder.Services.AddDbContext<GoalTrackerApp.Data.GoalTrackerAppDbContext>(options => options.UseSqlServer(connString));
+        connString = connString
+            .Replace("{DB_SERVER}", dbServer)
+            .Replace("{DB_NAME}", dbName)
+            .Replace("{DB_USER}", dbUser)
+            .Replace("{DB_PASS}", dbPassword);
+        
+        builder.Services.AddDbContext<GoalTrackerAppDbContext>(options => options.UseSqlServer(connString));
         builder.Services.AddRepositories();
-        builder.Services.AddAutoMapper(cfg => cfg.AddProfile<MapperConfig>());
-        builder.Host.UseSerilog((ctx, lc) => lc.ReadFrom.Configuration(ctx.Configuration));
+        builder.Services.AddScoped<IApplicationService, ApplicationService>();
         
-        builder.Services.AddControllers();
-        // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+        builder.Services.AddAutoMapper(cfg => cfg.AddProfile<MapperConfig>());
+        builder.Host.UseSerilog((ctx, lc) => 
+            lc.ReadFrom.Configuration(ctx.Configuration));
+        
+        builder.Services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        }).AddJwtBearer(options =>
+        {
+            var jwtSettings = builder.Configuration.GetSection("Authentication");
+            var secretKey = jwtSettings["SecretKey"] 
+                ?? throw new InvalidOperationException("JWT SecretKey not found in configuration.");
+            
+            options.IncludeErrorDetails = true;
+            options.SaveToken = true;
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidIssuer = "https://localhost:5001",
+
+                ValidateAudience = true,
+                ValidAudience = "https://localhost:5001",
+
+                ValidateLifetime = true, // ensure not expired
+                
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
+            };
+        });
+
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("LocalClient",
+                policy => policy.WithOrigins("https://localhost:5001")
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+                    .AllowCredentials());
+
+            options.AddPolicy("AllowAll",
+                policy => policy.AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader());
+        });
+        
+        builder.Services.AddControllers().AddNewtonsoftJson(options =>
+        {
+            options.SerializerSettings.NullValueHandling = NullValueHandling.Include;
+            options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Serialize;
+            options.SerializerSettings.Converters.Add(new StringEnumConverter());
+        });
+        
         builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen();
+        
+        
+        builder.Services.AddSwaggerGen(options =>
+        {
+            options.SwaggerDoc("v1", new OpenApiInfo { Title = "Goal Tracker App", Version = "v1" });
+            
+            // options.SupportNonNullableReferenceTypes(); // default true > .NET 6
+            options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme,
+                new OpenApiSecurityScheme
+                {
+                    Description = "JWT Authorization header using the Bearer scheme.",
+                    Name = "Authorization",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.Http,
+                    Scheme = JwtBearerDefaults.AuthenticationScheme,
+                    BearerFormat = "JWT"
+                });
+            options.OperationFilter<AuthorizeOperationFilter>();
+        });
 
         var app = builder.Build();
-
-        // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
         {
             app.UseSwagger();
-            app.UseSwaggerUI();
+            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Goal Tracker App v1"));
         }
 
         app.UseHttpsRedirection();
+        app.UseCors("LocalClient");
 
+        app.UseAuthentication();
         app.UseAuthorization();
 
-
+        app.UseMiddleware<ErrorHandlerMiddleware>();
         app.MapControllers();
 
         app.Run();
