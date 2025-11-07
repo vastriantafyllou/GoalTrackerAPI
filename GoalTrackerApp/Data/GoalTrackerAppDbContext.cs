@@ -25,13 +25,13 @@ public class GoalTrackerAppDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Username).HasMaxLength(50);
             entity.Property(e => e.Email).HasMaxLength(100);
-            entity.Property(e => e.Password).HasMaxLength(60); // Length (60) accommodates BCrypt hash outputs
+            entity.Property(e => e.Password).HasMaxLength(60);
             entity.Property(e => e.Firstname).HasMaxLength(255);
             entity.Property(e => e.Lastname).HasMaxLength(255);
             
             entity.Property(e => e.UserRole)
                 .HasMaxLength(20)
-                .HasConversion<string>(); // Store the UserRole enum as a string for readability
+                .HasConversion<string>();
 
             entity.Property(e => e.InsertedAt)
                 .ValueGeneratedOnAdd()
@@ -60,7 +60,7 @@ public class GoalTrackerAppDbContext : DbContext
              
              entity.Property(e => e.GoalStatus)
                  .HasMaxLength(20)
-                 .HasConversion<string>(); // Store the GoalStatus enum as a string for readability
+                 .HasConversion<string>();
              
              entity.Property(e => e.DueDate)
                  .IsRequired(false);
@@ -77,13 +77,13 @@ public class GoalTrackerAppDbContext : DbContext
                  .WithMany(u => u.Goals)
                  .HasForeignKey(e => e.UserId) 
                  .IsRequired()
-                 .OnDelete(DeleteBehavior.Cascade); // Deleting a User also deletes their Goals
+                 .OnDelete(DeleteBehavior.Cascade);
              
              entity.HasOne(g => g.GoalCategory)
                  .WithMany(c => c.Goals)
                  .HasForeignKey(g => g.GoalCategoryId)
-                 .IsRequired(false) // makes this relationship optional.
-                 .OnDelete(DeleteBehavior.SetNull); // Deleting a Category sets the Goal's category to Null 
+                 .IsRequired(false)
+                 .OnDelete(DeleteBehavior.SetNull); 
              
              entity.HasIndex(g => g.UserId, "IX_Goals_UserId");
              
@@ -107,8 +107,6 @@ public class GoalTrackerAppDbContext : DbContext
                  .ValueGeneratedOnAddOrUpdate()
                  .HasDefaultValueSql("GETUTCDATE()");
              
-             // Set to NoAction to prevent multiple cascade paths (cycles) when a User is deleted.
-             // Deleting categories must be handled manually in the service layer.
              entity.HasOne(g => g.User)
                  .WithMany(u => u.GoalCategories)
                  .HasForeignKey(g => g.UserId)
@@ -117,7 +115,6 @@ public class GoalTrackerAppDbContext : DbContext
              
              entity.HasIndex(g => g.UserId, "IX_GoalCategories_UserId");
              
-             // Composite unique index. A user cannot have two categories with the same name
              entity.HasIndex(u => new { u.UserId, u.Name }, "IX_GoalCategories_UserId_Name")
                  .IsUnique();
          });
