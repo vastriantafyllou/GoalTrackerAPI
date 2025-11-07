@@ -18,4 +18,10 @@ public class GoalCreateDto
     /// Optional due date for the goal.
     /// </summary>
     public DateTime? DueDate { get; set; }
+    
+    /// <summary>
+    /// Optional category for the goal.
+    /// </summary>
+    public int? GoalCategoryId { get; set; }
+    
 }

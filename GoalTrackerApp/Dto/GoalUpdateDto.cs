@@ -26,4 +26,6 @@ public class GoalUpdateDto
     /// </summary>
     [EnumDataType(typeof(GoalStatus), ErrorMessage = "Invalid Status value.")]
     public GoalStatus Status { get; set; }
+    public int? GoalCategoryId { get; set; }
+    
 }

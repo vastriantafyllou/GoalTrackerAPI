@@ -17,4 +17,10 @@ public class GoalReadOnlyDto
     
     public DateTime? DueDate { get; set; }
     public DateTime CreatedDate { get; set; }
+    
+    /// <summary>
+    /// Optional category for the goal.
+    /// </summary>
+    public int? GoalCategoryId { get; set; }
+    public string? CategoryName { get; set; }
 }
