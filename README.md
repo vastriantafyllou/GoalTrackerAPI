@@ -19,8 +19,6 @@ This repository contains the **backend API** for the GoalTracker application. Th
 - [Configuration](#-configuration)
 - [API Documentation](#-api-documentation)
 - [Authentication & Roles](#-authentication--roles)
-- [Deployment](#-deployment)
-- [Contributing](#-contributing)
 - [License](#-license)
 
 ---
@@ -115,7 +113,7 @@ This repository contains the **backend API** for the GoalTracker application. Th
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/GoalTrackerAPI.git
+   git clone https://github.com/vastriantafyllou/GoalTrackerAPI.git
    cd GoalTrackerAPI
    ```
 
@@ -331,97 +329,6 @@ A **SuperAdmin** account is automatically created on first application startup:
 
 ---
 
-## 🚢 Deployment
-
-### Azure App Service
-
-1. **Publish the application**
-   ```bash
-   dotnet publish -c Release -o ./publish
-   ```
-
-2. **Configure App Settings in Azure Portal**
-   - `DB_SERVER`
-   - `DB_NAME`
-   - `DB_USER`
-   - `DB_PASS`
-   - `Authentication__SecretKey`
-   - `SuperAdminPassword`
-
-3. **Deploy via Azure CLI**
-   ```bash
-   az webapp deployment source config-zip \
-     --resource-group YourResourceGroup \
-     --name YourAppName \
-     --src publish.zip
-   ```
-
-### Docker Deployment
-
-```dockerfile
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
-WORKDIR /app
-EXPOSE 80
-EXPOSE 443
-
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /src
-COPY ["GoalTrackerApp/GoalTrackerApp.csproj", "GoalTrackerApp/"]
-RUN dotnet restore "GoalTrackerApp/GoalTrackerApp.csproj"
-COPY . .
-WORKDIR "/src/GoalTrackerApp"
-RUN dotnet build "GoalTrackerApp.csproj" -c Release -o /app/build
-
-FROM build AS publish
-RUN dotnet publish "GoalTrackerApp.csproj" -c Release -o /app/publish
-
-FROM base AS final
-WORKDIR /app
-COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "GoalTrackerApp.dll"]
-```
-
-**Run with Docker:**
-```bash
-docker build -t goaltracker-api .
-docker run -d -p 5000:80 \
-  -e DB_SERVER="your-server" \
-  -e DB_NAME="GoalTrackerApiDB" \
-  -e DB_USER="user" \
-  -e DB_PASS="password" \
-  -e Authentication__SecretKey="your-secret-key" \
-  -e SuperAdminPassword="your-admin-password" \
-  goaltracker-api
-```
-
-### Other Platforms
-
-- **Render:** Deploy via GitHub integration
-- **Heroku:** Use buildpacks for .NET
-- **AWS EC2:** Deploy as self-contained application
-- **Railway:** Direct GitHub deployment
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-### Code Style
-
-- Follow C# naming conventions
-- Use XML documentation for public APIs
-- Write unit tests for new features
-- Maintain clean architecture principles
-
----
-
 ## 📄 License
 
 This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
@@ -430,9 +337,9 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ## 👨‍💻 Author
 
-**Vasileios G. Triantafyllou**
+**Vasileios Triantafyllou**
 
-- LinkedIn: [Vasileios Triantafyllou](https://www.linkedin.com/in/vasileios-triantafyllou)
+- LinkedIn: [Vasileios Triantafyllou](https://www.linkedin.com/in/vasileios-triantafyllou-0b028710b/)
 - GitHub: [@vastriantafyllou](https://github.com/vastriantafyllou)
 - Email: triantafyllou.vasileios@gmail.com
 
