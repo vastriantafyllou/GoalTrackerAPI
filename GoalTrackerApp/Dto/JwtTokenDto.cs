@@ -9,7 +9,7 @@ public class JwtTokenDto
     /// <summary>
     /// The JWT token string
     /// </summary>
-    public string Token { get; set; } = string.Empty;
+    public string? Token { get; set; } 
     
     /// <summary>
     /// The authenticated user's username
