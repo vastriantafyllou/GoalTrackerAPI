@@ -7,7 +7,8 @@
         <UserSecretsId>2dd4d980-88eb-47b5-a3e6-124f08a6e6d6</UserSecretsId>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <NoWarn>$(NoWarn);1591</NoWarn>
-  </PropertyGroup>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="AutoMapper" Version="15.0.1" />
