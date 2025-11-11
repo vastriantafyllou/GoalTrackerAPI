@@ -120,6 +120,29 @@ public class Program
         });
 
         var app = builder.Build();
+        
+        // Seed SuperAdmin user if not exists
+        using (var scope = app.Services.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<GoalTrackerAppDbContext>();
+            if (!context.Users.Any(u => u.UserRole == GoalTrackerApp.Core.Enums.UserRole.SuperAdmin))
+            {
+                var superAdminPassword = builder.Configuration["SuperAdminPassword"] ?? "SuperAdmin@123!";
+                
+                var superAdmin = new User
+                {
+                    Username = "superadmin",
+                    Email = "superadmin@goaltracker.com",
+                    Password = GoalTrackerApp.Core.Security.EncryptionUtil.Encrypt(superAdminPassword),
+                    Firstname = "Super",
+                    Lastname = "Administrator",
+                    UserRole = GoalTrackerApp.Core.Enums.UserRole.SuperAdmin
+                };
+                context.Users.Add(superAdmin);
+                context.SaveChanges();
+            }
+        }
+        
         if (app.Environment.IsDevelopment())
         {
             app.UseSwagger();
