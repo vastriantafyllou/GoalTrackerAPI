@@ -19,10 +19,10 @@ namespace GoalTrackerApp.Controllers
         }
 
         /// <summary>
-        /// Gets a user by ID. Admin only.
+        /// Gets a user by ID. Admin or SuperAdmin only.
         /// </summary>
         [HttpGet("{id:int}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "SuperAdmin,Admin")]
         public async Task<ActionResult<UserReadOnlyDto>> GetUserById(int id)
         {
             UserReadOnlyDto userReadOnlyDto = await ApplicationService.UserService.GetUserByIdAsync(id);
@@ -30,10 +30,10 @@ namespace GoalTrackerApp.Controllers
         }
 
         /// <summary>
-        /// Gets a user by username. Admin only.
+        /// Gets a user by username. Admin or SuperAdmin only.
         /// </summary>
         [HttpGet("by-username/{username}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "SuperAdmin,Admin")]
         public async Task<ActionResult<UserReadOnlyDto>> GetUserByUsernameAsync(string? username)
         {
             var returnedUserDto = await ApplicationService.UserService.GetUserByUsernameAsync(username!);
@@ -41,10 +41,10 @@ namespace GoalTrackerApp.Controllers
         }
 
         /// <summary>
-        /// Gets all users with pagination and filters. Admin only.
+        /// Gets all users with pagination and filters. Admin or SuperAdmin only.
         /// </summary>
         [HttpGet]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "SuperAdmin,Admin")]
         public async Task<ActionResult<PaginatedResult<UserReadOnlyDto>>> GetAllUsers(
             [FromQuery] int pageNumber = 1,
             [FromQuery] int pageSize = 10,
@@ -91,10 +91,10 @@ namespace GoalTrackerApp.Controllers
         }
 
         /// <summary>
-        /// Updates a user. Admin only.
+        /// Updates a user. Admin or SuperAdmin only.
         /// </summary>
         [HttpPut("{id:int}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "SuperAdmin,Admin")]
         public async Task<ActionResult<UserReadOnlyDto>> UpdateUser(int id, [FromBody] UserUpdateDto userUpdateDto)
         {
             if (!ModelState.IsValid)
@@ -112,14 +112,38 @@ namespace GoalTrackerApp.Controllers
         }
 
         /// <summary>
-        /// Deletes a user (soft delete). Admin only.
+        /// Deletes a user (soft delete). Admin or SuperAdmin only.
         /// </summary>
         [HttpDelete("{id:int}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "SuperAdmin,Admin")]
         public async Task<IActionResult> DeleteUser(int id)
         {
             await ApplicationService.UserService.DeleteUserAsync(id);
             return NoContent();
+        }
+
+        /// <summary>
+        /// Promotes a user to Admin. SuperAdmin only.
+        /// </summary>
+        [HttpPatch("{id:int}/promote")]
+        [Authorize(Roles = "SuperAdmin")]
+        public async Task<ActionResult<UserReadOnlyDto>> PromoteToAdmin(int id)
+        {
+            var updateDto = new UserUpdateDto { UserRole = Core.Enums.UserRole.Admin };
+            var updatedUser = await ApplicationService.UserService.UpdateUserAsync(id, updateDto);
+            return Ok(updatedUser);
+        }
+
+        /// <summary>
+        /// Demotes a user to regular User. SuperAdmin only.
+        /// </summary>
+        [HttpPatch("{id:int}/demote")]
+        [Authorize(Roles = "SuperAdmin")]
+        public async Task<ActionResult<UserReadOnlyDto>> DemoteToUser(int id)
+        {
+            var updateDto = new UserUpdateDto { UserRole = Core.Enums.UserRole.User };
+            var updatedUser = await ApplicationService.UserService.UpdateUserAsync(id, updateDto);
+            return Ok(updatedUser);
         }
     }
 }
