@@ -14,9 +14,9 @@ This repository contains the **backend API** for the GoalTracker application. Th
 
 - [Overview](#-overview)
 - [Features](#-features)
-- [Tech Stack](#-tech-stack)
+- [Tech Stack](#tech-stack)
 - [Getting Started](#-getting-started)
-- [Configuration](#-configuration)
+- [Configuration](#configuration)
 - [API Documentation](#-api-documentation)
 - [Authentication & Roles](#-authentication--roles)
 - [License](#-license)
@@ -78,6 +78,7 @@ This repository contains the **backend API** for the GoalTracker application. Th
 
 ---
 
+<a id="tech-stack"></a>
 ## 🛠️ Tech Stack
 
 ### Core Technologies
@@ -141,6 +142,7 @@ This repository contains the **backend API** for the GoalTracker application. Th
 
 ---
 
+<a id="configuration"></a>
 ## ⚙️ Configuration
 
 ### User Secrets (Development)
