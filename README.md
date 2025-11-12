@@ -14,9 +14,9 @@ This repository contains the **backend API** for the GoalTracker application. Th
 
 - [Overview](#-overview)
 - [Features](#-features)
-- [Tech Stack](#-tech-stack)
+- [Tech Stack](#tech-stack)
 - [Getting Started](#-getting-started)
-- [Configuration](#-configuration)
+- [Configuration](#configuration)
 - [API Documentation](#-api-documentation)
 - [Authentication & Roles](#-authentication--roles)
 - [License](#-license)
