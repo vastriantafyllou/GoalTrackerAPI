@@ -22,7 +22,7 @@ public class GoalRepository : BaseRepository<Goal>, IGoalRepository
     {
         return await dbSet
             .Include(g => g.GoalCategory)
-            .Where(g => g.UserId == userId)
+            .Where(g => g.UserId == userId && !g.IsDeleted)
             .ToListAsync();
     }
     
