@@ -35,6 +35,9 @@ public class UserRepository : BaseRepository<User>, IUserRepository
     public async Task<PaginatedResult<User>> GetUsersAsync(int pageNumber, int pageSize, List<Expression<Func<User, bool>>> predicates)
     {
         IQueryable<User> query = context.Users; 
+        
+        // Soft delete filter
+        query = query.Where(u => !u.IsDeleted);
 
         if (predicates != null && predicates.Count > 0)
         {
