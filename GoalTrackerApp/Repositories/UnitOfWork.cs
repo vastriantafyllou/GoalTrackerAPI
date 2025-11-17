@@ -1,23 +1,44 @@
 using GoalTrackerApp.Data;
-
-namespace GoalTrackerApp.Repositories;
+using GoalTrackerApp.Repositories;
 
 public class UnitOfWork : IUnitOfWork
 {
     private readonly GoalTrackerAppDbContext _context;
-    
+
+    // Private repository fields
+    // -----------------------------------------------------
+    // These fields store a single instance of each repository.
+    // They are kept private to prevent external modification
+    // and to maintain full control inside the UnitOfWork.
+    private UserRepository _userRepository;
+    private GoalRepository _goalRepository;
+    private GoalCategoryRepository _goalCategoryRepository;
+
     public UnitOfWork(GoalTrackerAppDbContext context)
     {
         _context = context;
     }
-    
-    // implement repositories as properties
-    public UserRepository UserRepository => new(_context);
-    public GoalRepository GoalRepository => new(_context);
-    public GoalCategoryRepository GoalCategoryRepository => new(_context);
-    
-    public async Task <bool> SaveAsync()
+
+    // Repository properties (Lazy-loaded)
+    // -----------------------------------------------------
+    // Each property initializes its repository only once.
+    // This ensures that the same repository instance is reused
+    // throughout the lifetime of the UnitOfWork.
+    // Without this, a new instance would be created on every call.
+    public UserRepository UserRepository =>
+        _userRepository ??= new UserRepository(_context);
+
+    public GoalRepository GoalRepository =>
+        _goalRepository ??= new GoalRepository(_context);
+
+    public GoalCategoryRepository GoalCategoryRepository =>
+        _goalCategoryRepository ??= new GoalCategoryRepository(_context);
+
+    // Saves all changes made through the repositories
+    // -----------------------------------------------------
+    // The UnitOfWork coordinates the commit for all repository actions.
+    public async Task<bool> SaveAsync()
     {
-        return await _context.SaveChangesAsync() > 0;  // commit & rollback if fails
+        return await _context.SaveChangesAsync() > 0;
     }
 }
