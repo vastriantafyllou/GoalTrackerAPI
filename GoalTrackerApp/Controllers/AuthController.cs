@@ -30,7 +30,12 @@ namespace GoalTrackerApp.Controllers;
         {
             var user = await ApplicationService.UserService.VerifyAndGetUserAsync(credentials) 
                 ?? throw new EntityNotAuthorizedException("User", "Bad Credentials");
-
+            
+            if (user.IsDeleted)
+            {
+                throw new UnauthorizedAccessException("This account has been deactivated.");
+            }
+            
             var token = ApplicationService.UserService.CreateUserToken(
                 user.Id, 
                 user.Username, 
