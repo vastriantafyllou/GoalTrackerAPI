@@ -12,8 +12,8 @@ namespace GoalTrackerApp.Controllers;
     /// [Authorize] locks the entire controller - all endpoints require authentication.
     /// </summary>
     [Authorize]
-    [Route("api/[controller]")]
-    [ApiController]
+    // [Route("api/[controller]")]
+    // [ApiController]
     public class GoalsController : BaseController
     {
         public GoalsController(IApplicationService applicationService) 

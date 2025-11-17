@@ -12,8 +12,8 @@ namespace GoalTrackerApp.Controllers
     /// All endpoints require authentication.
     /// </summary>
     [Authorize]
-    [Route("api/[controller]")]
-    [ApiController]
+    // [Route("api/[controller]")]
+    // [ApiController]
     public class GoalCategoryController : BaseController
     {
         public GoalCategoryController(IApplicationService applicationService) 
