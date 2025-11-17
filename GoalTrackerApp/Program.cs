@@ -79,8 +79,8 @@ public class Program
 
         builder.Services.AddCors(options =>
         {
-            options.AddPolicy("LocalClient",
-                policy => policy.WithOrigins("https://localhost:5001")
+            options.AddPolicy("AllowFrontend",
+                policy => policy.WithOrigins("http://localhost:5173")
                     .AllowAnyMethod()
                     .AllowAnyHeader()
                     .AllowCredentials());
@@ -150,7 +150,7 @@ public class Program
         }
 
         app.UseHttpsRedirection();
-        app.UseCors("LocalClient");
+        app.UseCors("AllowFrontend");
 
         app.UseAuthentication();
         app.UseAuthorization();
