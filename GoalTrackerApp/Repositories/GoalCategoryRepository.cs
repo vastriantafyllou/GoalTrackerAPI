@@ -12,7 +12,7 @@ public class GoalCategoryRepository : BaseRepository<GoalCategory>, IGoalCategor
     public async Task<IEnumerable<GoalCategory>> GetCategoriesByUserIdAsync(int userId)
     {
         return await dbSet
-            .Where(c => c.UserId == userId)
+            .Where(c => c.UserId == userId && !c.IsDeleted)
             .ToListAsync();
     }
 }
