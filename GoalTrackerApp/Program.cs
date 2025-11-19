@@ -19,28 +19,18 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+        
+        var dbServer = builder.Configuration["DB_SERVER"]
+                       ?? throw new InvalidOperationException("DB_SERVER environment variable is not set.");
+        var dbName = builder.Configuration["DB_NAME"]
+                     ?? throw new InvalidOperationException("DB_NAME environment variable is not set.");
+        var dbUser = builder.Configuration["DB_USER"]
+                     ?? throw new InvalidOperationException("DB_USER environment variable is not set.");
+        var dbPassword = builder.Configuration["DB_PASS"]
+                         ?? throw new InvalidOperationException("DB_PASS environment variable is not set.");
 
-        var connString = builder.Configuration.GetConnectionString("DefaultConnection")
-                         ?? throw new InvalidOperationException("DefaultConnection string not found in configuration.");
-        var dbServer = builder.Configuration["DB_SERVER"];
-        var dbName = builder.Configuration["DB_NAME"];
-        var dbUser = builder.Configuration["DB_USER"];
-        var dbPassword = builder.Configuration["DB_PASS"];
-        
-        if (string.IsNullOrEmpty(dbServer))
-            throw new InvalidOperationException("DB_SERVER environment variable is not set.");
-        if (string.IsNullOrEmpty(dbName))
-            throw new InvalidOperationException("DB_NAME environment variable is not set.");
-        if (string.IsNullOrEmpty(dbUser))
-            throw new InvalidOperationException("DB_USER environment variable is not set.");
-        if (string.IsNullOrEmpty(dbPassword))
-            throw new InvalidOperationException("DB_PASS environment variable is not set.");
-        
-        connString = connString
-            .Replace("{DB_SERVER}", dbServer)
-            .Replace("{DB_NAME}", dbName)
-            .Replace("{DB_USER}", dbUser)
-            .Replace("{DB_PASS}", dbPassword);
+        var connString =
+            $"Server={dbServer};Database={dbName};User={dbUser};Password={dbPassword};MultipleActiveResultSets=True;TrustServerCertificate=True;";
         
         builder.Services.AddDbContext<GoalTrackerAppDbContext>(options => options.UseSqlServer(connString));
         builder.Services.AddRepositories();
