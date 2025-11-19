@@ -102,20 +102,21 @@ namespace GoalTrackerApp.Services
             User? user = null;
             try
             {
-                user = await _unitOfWork.UserRepository.GetUserAsync(credentials.Username!, credentials.Password!);
+                user = await _unitOfWork.UserRepository.GetUserByUsernameAsync(credentials.Username!);
 
                 if (user == null)
-                {
-                    throw new EntityNotAuthorizedException("User", "Bad Credentials");
- 
-                }
+                    throw new EntityNotAuthorizedException("User", "Username does not exist");
 
+                if (!EncryptionUtil.IsValidPassword(credentials.Password!, user.Password))
+                    throw new EntityNotAuthorizedException("User", "Wrong password");
+                
                 _logger.LogInformation("User with username {Username} found", credentials.Username!);
             }
             catch (EntityNotAuthorizedException e)
             {
                 _logger.LogError("Authentication failed for username {Username}. {Message}",
                     credentials.Username, e.Message);
+                throw;
             }
             return user;
         }
