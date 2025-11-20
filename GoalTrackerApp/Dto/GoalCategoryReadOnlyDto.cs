@@ -6,5 +6,10 @@ namespace GoalTrackerApp.Dto
         public string Name { get; set; } = string.Empty;
         public int UserId { get; set; }
         public DateTime CreatedDate { get; set; }
+        
+        /// <summary>
+        /// Number of goals associated with this category.
+        /// </summary>
+        public int GoalCount { get; set; }
     }
 }

@@ -39,7 +39,9 @@ namespace GoalTrackerApp.Configuration
             
             CreateMap<GoalCategory, GoalCategoryReadOnlyDto>()
                 .ForMember(dest => dest.CreatedDate,
-                    opt => opt.MapFrom(src => src.InsertedAt));
+                    opt => opt.MapFrom(src => src.InsertedAt))
+                .ForMember(dest => dest.GoalCount,
+                    opt => opt.MapFrom(src => src.Goals.Count(g => !g.IsDeleted)));
         }
     }
 }
