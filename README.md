@@ -2,7 +2,7 @@
 
 > **A modern, secure REST API for personal goal management built with .NET 8, Entity Framework Core, and JWT authentication.**
 
-This repository contains the **backend API** for the GoalTracker application. The frontend is being developed in **React + TypeScript** and will be available soon.
+This repository contains the **backend API** for the GoalTracker application. The frontend is built with React + TypeScript and is available in the parent repository.
 
 [![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
 [![C#](https://img.shields.io/badge/C%23-12.0-239120?logo=csharp)](https://docs.microsoft.com/en-us/dotnet/csharp/)
@@ -20,6 +20,7 @@ This repository contains the **backend API** for the GoalTracker application. Th
 - [API Documentation](#-api-documentation)
 - [Authentication & Roles](#-authentication--roles)
 - [License](#-license)
+- [Related Projects](#-related-projects)
 
 ---
 
@@ -44,6 +45,18 @@ This repository contains the **backend API** for the GoalTracker application. Th
 - **BCrypt Password Hashing** for security
 
 ---
+
+### Database Structure Details
+
+**Entity-Relationship Overview:**
+
+```
+User (1) ──────< (Many) Goal
+  │
+  └──────< (Many) GoalCategory
+                       │
+                       └──────< (Many) Goal
+```
 
 ## ✨ Features
 
@@ -250,34 +263,6 @@ Content-Type: application/json
 | `PUT` | `/api/goalcategory/UpdateCategory/{id}` | User | Update category |
 | `DELETE` | `/api/goalcategory/DeleteCategory/{id}` | User | Delete category |
 
-### Request Examples
-
-#### Register User
-```bash
-curl -X POST https://localhost:5001/api/users/RegisterUserAsync \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "john_doe",
-    "email": "john@example.com",
-    "password": "SecurePass@123!",
-    "firstname": "John",
-    "lastname": "Doe"
-  }'
-```
-
-#### Create Goal
-```bash
-curl -X POST https://localhost:5001/api/goals/CreateGoal \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Learn .NET 8",
-    "description": "Complete .NET 8 course",
-    "categoryId": 1,
-    "targetDate": "2025-12-31T00:00:00Z"
-  }'
-```
-
 ---
 
 ## 🔐 Authentication & Roles
@@ -316,18 +301,12 @@ A **SuperAdmin** account is automatically created on first application startup:
 
 ### Security Best Practices
 
-✅ **DO:**
-- Use HTTPS in production
-- Store JWT tokens securely (HttpOnly cookies recommended for web)
-- Rotate JWT secret keys periodically
-- Set strong SuperAdmin passwords
-- Use User Secrets for local development
-
-❌ **DON'T:**
-- Hardcode credentials
-- Commit secrets to version control
-- Use default passwords in production
-- Share JWT tokens between users
+- ✅Use HTTPS in production
+- ✅Store JWT tokens securely (HttpOnly cookies recommended for web)
+- ✅Rotate JWT secret keys periodically
+- ✅Set strong SuperAdmin passwords
+- ✅Use User Secrets for development, environment variables for production
+- ❌ Never hardcode credentials or commit secrets to version control
 
 ---
 
@@ -349,7 +328,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ## 🔗 Related Projects
 
-- **GoalTracker Frontend** (Coming Soon) - React + TypeScript client application
+- **[GoalTracker Frontend](https://github.com/vastriantafyllou/goal-tracker-react)** - React + TypeScript client application
 
 ---
 
@@ -378,7 +357,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 ---
 
 <p align="center">
-  Made with ❤️ by Vasileios G. Triantafyllou
+  Made with ❤️ by Vasileios Triantafyllou
 </p>
 
 <p align="center">
