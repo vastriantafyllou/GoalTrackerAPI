@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text;
 using GoalTrackerApp.Configuration;
 using GoalTrackerApp.Core.Helpers;
@@ -93,6 +94,10 @@ public class Program
         
         builder.Services.AddSwaggerGen(options =>
         {
+            var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+            var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+            options.IncludeXmlComments(xmlPath); 
+            
             options.SwaggerDoc("v1", new OpenApiInfo { Title = "Goal Tracker App", Version = "v1" });
             
             // options.SupportNonNullableReferenceTypes(); // default true > .NET 6
