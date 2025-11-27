@@ -5,7 +5,7 @@ using GoalTrackerApp.Models;
 
 namespace GoalTrackerApp.Controllers;
 
-[Route("api/[controller]/[action]")]
+[Route("api/[controller]")]
 [ApiController]
 public class BaseController : ControllerBase
 {

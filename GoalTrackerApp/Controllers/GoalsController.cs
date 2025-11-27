@@ -12,8 +12,8 @@ namespace GoalTrackerApp.Controllers;
     /// [Authorize] locks the entire controller - all endpoints require authentication.
     /// </summary>
     [Authorize]
-    // [Route("api/[controller]")]
-    // [ApiController]
+    [Route("api/goals")]
+    [ApiController]
     public class GoalsController : BaseController
     {
         public GoalsController(IApplicationService applicationService) 
@@ -22,7 +22,7 @@ namespace GoalTrackerApp.Controllers;
         }
 
         /// <summary>
-        /// Creates a new goal for the authenticated user.
+        /// Create a new goal
         /// </summary>
         [HttpPost]
         public async Task<ActionResult<GoalReadOnlyDto>> CreateGoal([FromBody] GoalCreateDto dto)
@@ -34,7 +34,7 @@ namespace GoalTrackerApp.Controllers;
         }
 
         /// <summary>
-        /// Returns all goals for the authenticated user.
+        /// Get all user goals
         /// </summary>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<GoalReadOnlyDto>>> GetMyGoals()
@@ -45,7 +45,7 @@ namespace GoalTrackerApp.Controllers;
         }
 
         /// <summary>
-        /// Returns a specific goal if it belongs to the authenticated user.
+        /// Get goal by ID
         /// </summary>
         [HttpGet("{id}")]
         public async Task<ActionResult<GoalReadOnlyDto>> GetGoal(int id)
@@ -56,7 +56,7 @@ namespace GoalTrackerApp.Controllers;
         }
 
         /// <summary>
-        /// Updates a goal if it belongs to the authenticated user.
+        /// Update goal by ID
         /// </summary>
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateGoal(int id, [FromBody] GoalUpdateDto dto)
@@ -68,7 +68,7 @@ namespace GoalTrackerApp.Controllers;
         }
 
         /// <summary>
-        /// Deletes a goal if it belongs to the authenticated user.
+        /// Delete goal by ID
         /// </summary>
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteGoal(int id)

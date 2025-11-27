@@ -8,6 +8,8 @@ using GoalTrackerApp.Models;
 
 namespace GoalTrackerApp.Controllers
 {
+    [Route("api/users")]
+    [ApiController]
     public class UsersController : BaseController
     {
         private readonly IConfiguration _configuration;
@@ -19,7 +21,7 @@ namespace GoalTrackerApp.Controllers
         }
 
         /// <summary>
-        /// Gets a user by ID. Admin or SuperAdmin only.
+        /// Get user by ID
         /// </summary>
         [HttpGet("{id:int}")]
         [Authorize(Roles = "SuperAdmin,Admin")]
@@ -30,9 +32,9 @@ namespace GoalTrackerApp.Controllers
         }
 
         /// <summary>
-        /// Gets a user by username. Admin or SuperAdmin only.
+        /// Get user by username
         /// </summary>
-        [HttpGet("by-username/{username}")]
+        [HttpGet("username/{username}")]
         [Authorize(Roles = "SuperAdmin,Admin")]
         public async Task<ActionResult<UserReadOnlyDto>> GetUserByUsernameAsync(string? username)
         {
@@ -41,7 +43,7 @@ namespace GoalTrackerApp.Controllers
         }
 
         /// <summary>
-        /// Gets all users with pagination and filters. Admin or SuperAdmin only.
+        /// Get all users with pagination and filters
         /// </summary>
         [HttpGet]
         [Authorize(Roles = "SuperAdmin,Admin")]
@@ -66,14 +68,9 @@ namespace GoalTrackerApp.Controllers
         }
         
         /// <summary>
-        /// Registers a new user in the system
+        /// Register a new user
         /// </summary>
-        /// <param name="userSignupDto">The user registration details</param>
-        /// <returns>The newly created user's information</returns>
-        /// <response code="201">User successfully registered</response>
-        /// <response code="400">Invalid input data</response>
-        /// <exception cref="InvalidRegistrationException">Thrown when registration data is invalid</exception>
-        [HttpPost("register")] 
+        [HttpPost] 
         public async Task<ActionResult<UserReadOnlyDto>> RegisterUserAsync([FromBody] UserSignupDto userSignupDto)
         {
             if (!ModelState.IsValid)
@@ -91,7 +88,7 @@ namespace GoalTrackerApp.Controllers
         }
 
         /// <summary>
-        /// Updates a user. Admin or SuperAdmin only.
+        /// Update user by ID
         /// </summary>
         [HttpPut("{id:int}")]
         [Authorize(Roles = "SuperAdmin,Admin")]
@@ -112,7 +109,7 @@ namespace GoalTrackerApp.Controllers
         }
 
         /// <summary>
-        /// Deletes a user (soft delete). Admin or SuperAdmin only.
+        /// Delete user by ID
         /// </summary>
         [HttpDelete("{id:int}")]
         [Authorize(Roles = "SuperAdmin,Admin")]
@@ -123,9 +120,9 @@ namespace GoalTrackerApp.Controllers
         }
 
         /// <summary>
-        /// Promotes a user to Admin. SuperAdmin only.
+        /// Promote user to admin
         /// </summary>
-        [HttpPatch("{id:int}/promote")]
+        [HttpPatch("{id:int}/role/promote")]
         [Authorize(Roles = "SuperAdmin")]
         public async Task<ActionResult<UserReadOnlyDto>> PromoteToAdmin(int id)
         {
@@ -135,9 +132,9 @@ namespace GoalTrackerApp.Controllers
         }
 
         /// <summary>
-        /// Demotes a user to regular User. SuperAdmin only.
+        /// Demote admin to user
         /// </summary>
-        [HttpPatch("{id:int}/demote")]
+        [HttpPatch("{id:int}/role/demote")]
         [Authorize(Roles = "SuperAdmin")]
         public async Task<ActionResult<UserReadOnlyDto>> DemoteToUser(int id)
         {

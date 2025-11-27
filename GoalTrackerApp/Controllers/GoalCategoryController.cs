@@ -12,8 +12,8 @@ namespace GoalTrackerApp.Controllers
     /// All endpoints require authentication.
     /// </summary>
     [Authorize]
-    // [Route("api/[controller]")]
-    // [ApiController]
+    [Route("api/categories")]
+    [ApiController]
     public class GoalCategoryController : BaseController
     {
         public GoalCategoryController(IApplicationService applicationService) 
@@ -22,7 +22,7 @@ namespace GoalTrackerApp.Controllers
         }
 
         /// <summary>
-        /// Creates a new category for the authenticated user.
+        /// Create a new category
         /// </summary>
         [HttpPost]
         public async Task<ActionResult<GoalCategoryReadOnlyDto>> CreateCategory([FromBody] GoalCategoryCreateDto dto)
@@ -34,7 +34,7 @@ namespace GoalTrackerApp.Controllers
         }
 
         /// <summary>
-        /// Returns all categories for the authenticated user.
+        /// Get all user categories
         /// </summary>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<GoalCategoryReadOnlyDto>>> GetMyCategories()
@@ -45,7 +45,7 @@ namespace GoalTrackerApp.Controllers
         }
 
         /// <summary>
-        /// Returns a specific category if it belongs to the authenticated user.
+        /// Get category by ID
         /// </summary>
         [HttpGet("{id}")]
         public async Task<ActionResult<GoalCategoryReadOnlyDto>> GetCategory(int id)
@@ -56,7 +56,7 @@ namespace GoalTrackerApp.Controllers
         }
 
         /// <summary>
-        /// Updates a category if it belongs to the authenticated user.
+        /// Update category by ID
         /// </summary>
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateCategory(int id, [FromBody] GoalCategoryUpdateDto dto)
@@ -68,7 +68,7 @@ namespace GoalTrackerApp.Controllers
         }
 
         /// <summary>
-        /// Deletes a category if it belongs to the authenticated user.
+        /// Delete category by ID
         /// </summary>
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCategory(int id)

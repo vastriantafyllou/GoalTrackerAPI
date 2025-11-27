@@ -18,14 +18,9 @@ namespace GoalTrackerApp.Controllers;
         }
         
         /// <summary>
-        /// Handles user authentication by validating credentials and returning a JWT token
+        /// Authenticate user and get token
         /// </summary>
-        /// <param name="credentials">The user's login credentials (username/password)</param>
-        /// <returns>A JWT token for authenticated requests</returns>
-        /// <response code="200">Returns the JWT token upon successful authentication</response>
-        /// <response code="401">Invalid username or password</response>
-        /// <exception cref="EntityNotAuthorizedException">Thrown when authentication fails</exception>
-        [HttpPost("login/access-token")]
+        [HttpPost ("login/access-token")]
         public async Task<ActionResult<JwtTokenDto>> LoginUserAsync([FromBody] UserLoginDto credentials)
         {
             var user = await ApplicationService.UserService.VerifyAndGetUserAsync(credentials) 
