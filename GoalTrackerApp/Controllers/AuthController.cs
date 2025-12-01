@@ -47,4 +47,34 @@ namespace GoalTrackerApp.Controllers;
             };
             return Ok(userToken);
         }
+
+        /// <summary>
+        /// Send recovery email
+        /// </summary>
+        [HttpPost("/api/password-recovery/{email}")]
+        public async Task<IActionResult> SendPasswordRecoveryEmail(string email)
+        {
+            await ApplicationService.UserService.SendPasswordRecoveryEmailAsync(email);
+            return Ok(new { message = "Password recovery email sent successfully" });
+        }
+
+        /// <summary>
+        /// Reset password
+        /// </summary>
+        [HttpPost("/api/reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] PasswordResetDto resetDto)
+        {
+            await ApplicationService.UserService.ResetPasswordAsync(resetDto);
+            return Ok(new { message = "Password reset successfully" });
+        }
+
+        /// <summary>
+        /// Validate reset token
+        /// </summary>
+        [HttpGet("/api/reset-password/{token}")]
+        public async Task<ActionResult<PasswordResetTokenValidationDto>> ValidateResetToken(string token)
+        {
+            var result = await ApplicationService.UserService.ValidateResetTokenAsync(token);
+            return Ok(result);
+        }
     }

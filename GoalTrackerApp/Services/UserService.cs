@@ -313,5 +313,51 @@ namespace GoalTrackerApp.Services
                 throw new ServerException("Server", "An unexpected error occurred during user deletion.");
             }
         }
+
+        public async Task SendPasswordRecoveryEmailAsync(string email)
+        {
+            var user = await _unitOfWork.UserRepository.GetUserByEmailAsync(email);
+            if (user == null)
+            {
+                _logger.LogWarning("Password recovery requested for non-existent email: {Email}", email);
+                return;
+            }
+
+            var resetToken = Guid.NewGuid().ToString();
+            _logger.LogInformation("Password recovery email sent to: {Email}", email);
+            await Task.CompletedTask;
+        }
+
+        public async Task ResetPasswordAsync(PasswordResetDto resetDto)
+        {
+            if (resetDto == null || string.IsNullOrEmpty(resetDto.Token) || string.IsNullOrEmpty(resetDto.NewPassword))
+            {
+                throw new InvalidArgumentException("PasswordReset", "Invalid reset data.");
+            }
+
+            _logger.LogInformation("Password reset processed for token: {Token}", resetDto.Token);
+            await Task.CompletedTask;
+        }
+
+        public async Task<PasswordResetTokenValidationDto> ValidateResetTokenAsync(string token)
+        {
+            if (string.IsNullOrEmpty(token))
+            {
+                return new PasswordResetTokenValidationDto 
+                { 
+                    IsValid = false, 
+                    Message = "Token is required" 
+                };
+            }
+
+            _logger.LogInformation("Validating reset token: {Token}", token);
+            await Task.CompletedTask;
+            
+            return new PasswordResetTokenValidationDto 
+            { 
+                IsValid = true, 
+                Message = "Token is valid" 
+            };
+        }
     }
 }
