@@ -13,6 +13,7 @@ public class UnitOfWork : IUnitOfWork
     private UserRepository _userRepository;
     private GoalRepository _goalRepository;
     private GoalCategoryRepository _goalCategoryRepository;
+    private PasswordResetTokenRepository _passwordResetTokenRepository;
 
     public UnitOfWork(GoalTrackerAppDbContext context)
     {
@@ -33,6 +34,9 @@ public class UnitOfWork : IUnitOfWork
 
     public GoalCategoryRepository GoalCategoryRepository =>
         _goalCategoryRepository ??= new GoalCategoryRepository(_context);
+
+    public PasswordResetTokenRepository PasswordResetTokenRepository =>
+        _passwordResetTokenRepository ??= new PasswordResetTokenRepository(_context);
 
     // Saves all changes made through the repositories
     // -----------------------------------------------------
