@@ -16,6 +16,7 @@ public class GoalTrackerAppDbContext : DbContext
     public DbSet<User> Users { get; set; } = null!;
     public DbSet<Goal> Goals { get; set; } = null!;
     public DbSet<GoalCategory> Categories { get; set; } = null!;
+    public DbSet<PasswordResetToken> PasswordResetTokens { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -117,6 +118,40 @@ public class GoalTrackerAppDbContext : DbContext
              
              entity.HasIndex(u => new { u.UserId, u.Name }, "IX_GoalCategories_UserId_Name")
                  .IsUnique();
+         });
+         
+         modelBuilder.Entity<PasswordResetToken>(entity =>
+         {
+             entity.ToTable("PasswordResetTokens");
+             entity.HasKey(e => e.Id);
+             
+             entity.Property(e => e.Token)
+                 .IsRequired()
+                 .HasMaxLength(500);
+             
+             entity.Property(e => e.ExpiresAt)
+                 .IsRequired();
+             
+             entity.Property(e => e.IsUsed)
+                 .IsRequired()
+                 .HasDefaultValue(false);
+             
+             entity.Property(e => e.CreatedAt)
+                 .IsRequired()
+                 .HasDefaultValueSql("GETUTCDATE()");
+             
+             entity.Property(e => e.IpAddress)
+                 .HasMaxLength(50);
+             
+             entity.HasOne(e => e.User)
+                 .WithMany()
+                 .HasForeignKey(e => e.UserId)
+                 .IsRequired()
+                 .OnDelete(DeleteBehavior.Cascade);
+             
+             entity.HasIndex(e => e.Token, "IX_PasswordResetTokens_Token");
+             entity.HasIndex(e => e.UserId, "IX_PasswordResetTokens_UserId");
+             entity.HasIndex(e => new { e.Token, e.ExpiresAt, e.IsUsed }, "IX_PasswordResetTokens_Token_ExpiresAt_IsUsed");
          });
     }
 }
