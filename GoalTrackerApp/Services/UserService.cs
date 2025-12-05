@@ -314,18 +314,62 @@ namespace GoalTrackerApp.Services
             }
         }
 
-        public async Task SendPasswordRecoveryEmailAsync(string email)
+        public async Task<UserReadOnlyDto?> GetUserByEmailAsync(string email)
         {
             var user = await _unitOfWork.UserRepository.GetUserByEmailAsync(email);
-            if (user == null)
-            {
-                _logger.LogWarning("Password recovery requested for non-existent email: {Email}", email);
-                return;
-            }
+            return user == null ? null : _mapper.Map<UserReadOnlyDto>(user);
+        }
 
-            var resetToken = Guid.NewGuid().ToString();
-            _logger.LogInformation("Password recovery email sent to: {Email}", email);
-            await Task.CompletedTask;
+        public async Task<List<Data.PasswordResetToken>> GetActivePasswordResetTokensAsync(int userId)
+        {
+            return await _unitOfWork.PasswordResetTokenRepository.GetActiveTokensByUserIdAsync(userId);
+        }
+
+        public async Task<Data.PasswordResetToken?> GetPasswordResetTokenByValueAsync(string token)
+        {
+            return await _unitOfWork.PasswordResetTokenRepository.GetByTokenAsync(token);
+        }
+
+        public async Task SendPasswordRecoveryEmailAsync(string email)
+        {
+            try
+            {
+                var user = await _unitOfWork.UserRepository.GetUserByEmailAsync(email);
+                if (user == null)
+                {
+                    _logger.LogWarning("Password recovery requested for non-existent email: {Email}", email);
+                    return;
+                }
+
+                if (user.IsDeleted)
+                {
+                    _logger.LogWarning("Password recovery requested for deleted user account: {Email}", email);
+                    return;
+                }
+
+                var resetToken = Guid.NewGuid().ToString();
+                var expiresAt = DateTime.UtcNow.AddHours(1);
+
+                var passwordResetToken = new Data.PasswordResetToken
+                {
+                    UserId = user.Id,
+                    Token = resetToken,
+                    ExpiresAt = expiresAt,
+                    IsUsed = false,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _unitOfWork.PasswordResetTokenRepository.AddAsync(passwordResetToken);
+                await _unitOfWork.SaveAsync();
+
+                _logger.LogInformation("Password reset token created for user {UserId}", user.Id);
+                await Task.CompletedTask;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error sending password recovery email to {Email}", email);
+                throw new ServerException("Server", "An error occurred while processing password recovery request.");
+            }
         }
 
         public async Task ResetPasswordAsync(PasswordResetDto resetDto)
@@ -335,8 +379,58 @@ namespace GoalTrackerApp.Services
                 throw new InvalidArgumentException("PasswordReset", "Invalid reset data.");
             }
 
-            _logger.LogInformation("Password reset processed for token: {Token}", resetDto.Token);
-            await Task.CompletedTask;
+            try
+            {
+                var passwordResetToken = await _unitOfWork.PasswordResetTokenRepository.GetByTokenAsync(resetDto.Token);
+                
+                if (passwordResetToken == null)
+                {
+                    _logger.LogWarning("Invalid password reset token: {Token}", resetDto.Token);
+                    throw new InvalidArgumentException("PasswordReset", "Invalid or expired reset token.");
+                }
+
+                if (passwordResetToken.IsUsed)
+                {
+                    _logger.LogWarning("Password reset token already used: {Token}", resetDto.Token);
+                    throw new InvalidArgumentException("PasswordReset", "This reset token has already been used.");
+                }
+
+                if (passwordResetToken.ExpiresAt < DateTime.UtcNow)
+                {
+                    _logger.LogWarning("Expired password reset token: {Token}", resetDto.Token);
+                    throw new InvalidArgumentException("PasswordReset", "This reset token has expired.");
+                }
+
+                var user = await _unitOfWork.UserRepository.GetAsync(passwordResetToken.UserId);
+                if (user == null)
+                {
+                    _logger.LogError("User not found for password reset token: {UserId}", passwordResetToken.UserId);
+                    throw new EntityNotFoundException("User", "User not found.");
+                }
+
+                user.Password = EncryptionUtil.Encrypt(resetDto.NewPassword);
+                await _unitOfWork.UserRepository.UpdateAsync(user);
+
+                passwordResetToken.IsUsed = true;
+                await _unitOfWork.PasswordResetTokenRepository.UpdateAsync(passwordResetToken);
+
+                await _unitOfWork.SaveAsync();
+
+                _logger.LogInformation("Password successfully reset for user {UserId}", user.Id);
+            }
+            catch (InvalidArgumentException)
+            {
+                throw;
+            }
+            catch (EntityNotFoundException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error resetting password for token: {Token}", resetDto.Token);
+                throw new ServerException("Server", "An error occurred while resetting password.");
+            }
         }
 
         public async Task<PasswordResetTokenValidationDto> ValidateResetTokenAsync(string token)
@@ -350,14 +444,56 @@ namespace GoalTrackerApp.Services
                 };
             }
 
-            _logger.LogInformation("Validating reset token: {Token}", token);
-            await Task.CompletedTask;
-            
-            return new PasswordResetTokenValidationDto 
-            { 
-                IsValid = true, 
-                Message = "Token is valid" 
-            };
+            try
+            {
+                var passwordResetToken = await _unitOfWork.PasswordResetTokenRepository.GetByTokenAsync(token);
+                
+                if (passwordResetToken == null)
+                {
+                    _logger.LogWarning("Token validation failed: token not found - {Token}", token);
+                    return new PasswordResetTokenValidationDto 
+                    { 
+                        IsValid = false, 
+                        Message = "Invalid token" 
+                    };
+                }
+
+                if (passwordResetToken.IsUsed)
+                {
+                    _logger.LogWarning("Token validation failed: token already used - {Token}", token);
+                    return new PasswordResetTokenValidationDto 
+                    { 
+                        IsValid = false, 
+                        Message = "This token has already been used" 
+                    };
+                }
+
+                if (passwordResetToken.ExpiresAt < DateTime.UtcNow)
+                {
+                    _logger.LogWarning("Token validation failed: token expired - {Token}", token);
+                    return new PasswordResetTokenValidationDto 
+                    { 
+                        IsValid = false, 
+                        Message = "This token has expired" 
+                    };
+                }
+
+                _logger.LogInformation("Token validated successfully: {Token}", token);
+                return new PasswordResetTokenValidationDto 
+                { 
+                    IsValid = true, 
+                    Message = "Token is valid" 
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error validating reset token: {Token}", token);
+                return new PasswordResetTokenValidationDto 
+                { 
+                    IsValid = false, 
+                    Message = "Error validating token" 
+                };
+            }
         }
     }
 }

@@ -20,5 +20,8 @@ namespace GoalTrackerApp.Services
         Task SendPasswordRecoveryEmailAsync(string email);
         Task ResetPasswordAsync(PasswordResetDto resetDto);
         Task<PasswordResetTokenValidationDto> ValidateResetTokenAsync(string token);
+        Task<UserReadOnlyDto?> GetUserByEmailAsync(string email);
+        Task<List<Data.PasswordResetToken>> GetActivePasswordResetTokensAsync(int userId);
+        Task<Data.PasswordResetToken?> GetPasswordResetTokenByValueAsync(string token);
     }
 }

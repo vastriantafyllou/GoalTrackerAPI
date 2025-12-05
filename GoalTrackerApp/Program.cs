@@ -2,6 +2,8 @@ using System.Reflection;
 using System.Text;
 using GoalTrackerApp.Configuration;
 using GoalTrackerApp.Core.Helpers;
+using GoalTrackerApp.Core.RateLimiting;
+using GoalTrackerApp.Core.Captcha;
 using GoalTrackerApp.Data;
 using GoalTrackerApp.Repositories;
 using GoalTrackerApp.Services;
@@ -36,6 +38,11 @@ public class Program
         builder.Services.AddDbContext<GoalTrackerAppDbContext>(options => options.UseSqlServer(connString));
         builder.Services.AddRepositories();
         builder.Services.AddScoped<IApplicationService, ApplicationService>();
+        
+        builder.Services.AddScoped<IEmailService, EmailService>();
+        builder.Services.AddScoped<IEmailTemplateService, EmailTemplateService>();
+        builder.Services.AddSingleton<PasswordRecoveryRateLimiter>();
+        builder.Services.AddHttpClient<ICaptchaService, CaptchaService>();
         
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<MapperConfig>());
         builder.Host.UseSerilog((ctx, lc) => 
