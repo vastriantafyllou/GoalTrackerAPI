@@ -330,20 +330,20 @@ namespace GoalTrackerApp.Services
             return await _unitOfWork.PasswordResetTokenRepository.GetByTokenAsync(token);
         }
 
-        public async Task SendPasswordRecoveryEmailAsync(string email)
+        public async Task SendPasswordRecoveryEmailAsync(string email, string? ipAddress = null)
         {
             try
             {
                 var user = await _unitOfWork.UserRepository.GetUserByEmailAsync(email);
                 if (user == null)
                 {
-                    _logger.LogWarning("Password recovery requested for non-existent email: {Email}", email);
+                    _logger.LogWarning("Password recovery requested for non-existent email: {Email} from IP: {IP}", email, ipAddress ?? "unknown");
                     return;
                 }
 
                 if (user.IsDeleted)
                 {
-                    _logger.LogWarning("Password recovery requested for deleted user account: {Email}", email);
+                    _logger.LogWarning("Password recovery requested for deleted user account: {Email} from IP: {IP}", email, ipAddress ?? "unknown");
                     return;
                 }
 
@@ -356,18 +356,19 @@ namespace GoalTrackerApp.Services
                     Token = resetToken,
                     ExpiresAt = expiresAt,
                     IsUsed = false,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
+                    IpAddress = ipAddress
                 };
 
                 await _unitOfWork.PasswordResetTokenRepository.AddAsync(passwordResetToken);
                 await _unitOfWork.SaveAsync();
 
-                _logger.LogInformation("Password reset token created for user {UserId}", user.Id);
+                _logger.LogInformation("Password reset token created for user {UserId} from IP: {IP}", user.Id, ipAddress ?? "unknown");
                 await Task.CompletedTask;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error sending password recovery email to {Email}", email);
+                _logger.LogError(ex, "Error sending password recovery email to {Email} from IP: {IP}", email, ipAddress ?? "unknown");
                 throw new ServerException("Server", "An error occurred while processing password recovery request.");
             }
         }

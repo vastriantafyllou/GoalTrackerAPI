@@ -17,7 +17,7 @@ namespace GoalTrackerApp.Services
         Task<UserReadOnlyDto> UpdateUserAsync(int userId, UserUpdateDto updateDto);
         Task DeleteUserAsync(int userId);
         string CreateUserToken(int userId, string username, string email, UserRole userRole, string appSecurityKey);
-        Task SendPasswordRecoveryEmailAsync(string email);
+        Task SendPasswordRecoveryEmailAsync(string email, string? ipAddress = null);
         Task ResetPasswordAsync(PasswordResetDto resetDto);
         Task<PasswordResetTokenValidationDto> ValidateResetTokenAsync(string token);
         Task<UserReadOnlyDto?> GetUserByEmailAsync(string email);

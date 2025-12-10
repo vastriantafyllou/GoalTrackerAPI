@@ -72,6 +72,13 @@ namespace GoalTrackerApp.Controllers;
         {
             var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
             
+            var captchaEnabled = _configuration.GetValue<bool>("CaptchaSettings:Enabled");
+            if (captchaEnabled && string.IsNullOrEmpty(captchaToken))
+            {
+                _logger.LogWarning("CAPTCHA token required but not provided for: {Email} from {IP}", email, ipAddress);
+                return BadRequest(new { message = "CAPTCHA token is required" });
+            }
+            
             if (!_rateLimiter.IsAllowed(email))
             {
                 var retryAfter = _rateLimiter.GetRetryAfter(email);
@@ -88,14 +95,14 @@ namespace GoalTrackerApp.Controllers;
                 var captchaValid = await _captchaService.ValidateCaptchaAsync(captchaToken);
                 if (!captchaValid)
                 {
-                    _logger.LogWarning("Invalid CAPTCHA for password recovery: {Email}", email);
+                    _logger.LogWarning("Invalid CAPTCHA for password recovery: {Email} from {IP}", email, ipAddress);
                     return BadRequest(new { message = "Invalid CAPTCHA token" });
                 }
             }
 
             _logger.LogInformation("Password recovery requested for {Email} from {IP}", email, ipAddress);
             
-            await ApplicationService.UserService.SendPasswordRecoveryEmailAsync(email);
+            await ApplicationService.UserService.SendPasswordRecoveryEmailAsync(email, ipAddress);
             
             var frontendUrl = _configuration["PasswordReset:FrontendResetUrl"] ?? "http://localhost:5173/reset-password";
             var user = await ApplicationService.UserService.GetUserByEmailAsync(email);
@@ -107,8 +114,17 @@ namespace GoalTrackerApp.Controllers;
                 
                 if (latestToken != null)
                 {
-                    var resetLink = $"{frontendUrl}?token={latestToken.Token}";
-                    await _emailService.SendPasswordRecoveryEmailAsync(email, resetLink, user.Username);
+                    try
+                    {
+                        var resetLink = $"{frontendUrl}?token={latestToken.Token}";
+                        await _emailService.SendPasswordRecoveryEmailAsync(email, resetLink, user.Username);
+                        _logger.LogInformation("Password recovery email sent successfully to {Email}", email);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to send password recovery email to {Email}, token was created but email failed", email);
+                        return StatusCode(500, new { message = "Password recovery token created but email delivery failed. Please contact support." });
+                    }
                 }
             }
             
@@ -122,7 +138,9 @@ namespace GoalTrackerApp.Controllers;
         public async Task<IActionResult> ResetPassword([FromBody] PasswordResetDto resetDto)
         {
             var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-            _logger.LogInformation("Password reset attempt from {IP} with token", ipAddress);
+            _logger.LogInformation("Password reset attempt from {IP}", ipAddress);
+            
+            await ApplicationService.UserService.ResetPasswordAsync(resetDto);
             
             var tokenEntity = await ApplicationService.UserService.GetPasswordResetTokenByValueAsync(resetDto.Token!);
             if (tokenEntity != null)
@@ -130,9 +148,14 @@ namespace GoalTrackerApp.Controllers;
                 var user = await ApplicationService.UserService.GetUserByIdAsync(tokenEntity.UserId);
                 if (user != null)
                 {
-                    await ApplicationService.UserService.ResetPasswordAsync(resetDto);
-                    
-                    await _emailService.SendPasswordResetConfirmationAsync(user.Email, user.Username);
+                    try
+                    {
+                        await _emailService.SendPasswordResetConfirmationAsync(user.Email, user.Username);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to send password reset confirmation email to {Email}, but password was successfully reset", user.Email);
+                    }
                 }
             }
             
